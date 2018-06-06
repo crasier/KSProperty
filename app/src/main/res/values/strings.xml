@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">物业费用管理</string>
+    <string name="copyright">版权所有©康顺物业 2018</string>
+    <string name="company">康顺物业</string>
+    <string name="tap_exit">再次点击返回键退出APP</string>
+    <string name="login_hint_acc">输入账号</string>
+    <string name="login_hint_nick">输入昵称</string>
+    <string name="login_hint_pwd">输入密码</string>
+    <string name="login_hint_confirm">再次输入密码</string>
+    <string name="login">登录</string>
+    <string name="register">注册</string>
+    <string name="register_success">注册成功，将回到登录界面</string>
+    <string name="operation_failed">操作失败</string>
+    <string name="operation_success">操作成功</string>
+    <string name="login_register">没有账号？注册一个</string>
+    <string name="acc_empty">账号不能为空</string>
+    <string name="pwd_empty">密码不能为空</string>
+    <string name="confirm_fail">两次密码不相同</string>
+    <string name="main_info">房屋</string>
+    <string name="main_community">社区</string>
+    <string name="main_mine">我的</string>
+    <string name="loading">加载中&#8230;</string>
+    <string name="logining">正在登录&#8230;</string>
+    <string name="login_fail">登录失败，请联系物业人员</string>
+    <string name="committing">正在提交&#8230;</string>
+    <string name="version">软件版本:%1$s</string>
+    <string name="logout">退出登录</string>
+    <string name="not_support">暂不支持该操作，请联系物业人员</string>
+    <string name="sure">确定</string>
+    <string name="cancel">取消</string>
+    <string name="tips_warmly">温馨提示</string>
+    <string name="no_data">暂无数据</string>
+
+    <!--楼房信息相关-->
+    <string name="home_empty"><![CDATA[
+            您还没有绑定您的住房，<font color="#0898D2">去绑定</font>
+    ]]></string>
+    <string name="home_refresh_fail">获取绑定房屋失败，请下拉刷新或者联系物业人员</string>
+    <string name="home_fee_fail">获取费用信息失败，请下拉刷新或者联系物业人员</string>
+
+    <!--我的-->
+    <string name="mine_build_manage">住房绑定管理</string>
+    <string name="mine_build_account">登录账号:%s</string>
+    <string name="mine_build_choose">选择楼宇</string>
+    <string name="mine_house_choose">选择住房</string>
+    <string name="build_get_failed">获取楼宇信息失败，请重试</string>
+    <string name="house_get_failed">获取住户信息失败，请重试</string>
+    <string name="info_inhabitant">%s%d单元%d层  %s</string>
+    <string name="house_has_bound">您已添加过该住房%s</string>
+    <string name="house_delete_tip">您确定要删除该住房：%s?</string>
+    <string name="house_add_tip">您确定要绑定该住房：%s?</string>
+
+    <string name="fee_charge_unpay">应缴费用</string>
+    <string name="fee_charge_payed">预缴费用</string>
+    <string name="fee_go_pay">去缴费</string>
+
+    <string name="fee_title_inno">房号</string>
+    <string name="fee_title_inname">姓名</string>
+    <string name="fee_title_name">费项</string>
+    <string name="fee_title_buildid">楼号</string>
+    <string name="fee_title_lastCount">上次读数</string>
+    <string name="fee_title_thisCount">本次读数</string>
+    <string name="fee_title_lasttime">上次缴费至</string>
+    <string name="fee_title_thistime">缴费至</string>
+    <string name="fee_title_total">小计</string>
+    <string name="fee_title_cal">计费方式</string>
+    <string name="fee_title_price">单价</string>
+    <string name="fee_title_counts">周期</string>
+    <string name="fee_title_paymonth">支付月份</string>
+    <string name="fee_title_payed">预交</string>
+    <string name="fee_title_creator">账号</string>
+    <string name="fee_title_billfile">账单</string>
+    <string name="fee_title_payfile">缴费详情</string>
+    <string name="fee_title_remark">备注</string>
+    <string name="fee_title_limit">限额</string>
+    <string name="fee_title_whole">小计</string>
+
+    <string name="date_picker_title">选择缴费月份</string>
+</resources>
