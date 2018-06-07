@@ -1,25 +1,21 @@
 package com.kswy.property.main;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.Html;
 import android.util.Log;
-import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.support.jaxrs.FastJsonAutoDiscoverable;
 import com.kswy.property.BaseFragment;
 import com.kswy.property.R;
 import com.kswy.property.bean.House;
@@ -32,8 +28,6 @@ import com.scwang.smartrefresh.header.MaterialHeader;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
-
-import org.reactivestreams.Subscriber;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +56,7 @@ public class HomeFragment extends BaseFragment {
     public ArrayList<House> mInfos;
     private HashMap<String, ArrayList<Fee>> feeMap;//费用清单key:inNo,value:Fee
     private HomeAdapter mAdapter;
-    private HashMap<String, View> mChildViews;//
+    private HashMap<String, FeeDetailController> mChildController;//
     private LayoutInflater mInflator;
 
     private static HomeFragment instance;
@@ -82,14 +76,15 @@ public class HomeFragment extends BaseFragment {
 
         unbinder = ButterKnife.bind(this, contentView);
         getBuild();
-        mChildViews = new HashMap<>();
+        mChildController = new HashMap<>();
         mInflator = inflater;
 
         mRefreshLayout.setOnRefreshListener(onRefreshListener);
         mAdapter = new HomeAdapter();
         mListView.setAdapter(mAdapter);
-        mListView.setOnGroupClickListener(groupClickListener);
+//        mListView.setOnGroupClickListener(groupClickListener);
         mListView.setOnGroupExpandListener(expandListener);
+        mListView.setOnChildClickListener(onChildClickListener);
         return contentView;
     }
 
@@ -105,10 +100,7 @@ public class HomeFragment extends BaseFragment {
                 @Override
                 public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
                     Log.e(TAG, "onGroupClick: "+expandableListView.isGroupExpanded(i));
-                    if (mChildViews.get(mInfos.get(i).getInNo()) == null) {
-                        getBuild();
-                        return true;
-                    }
+
                     return false;
                 }
             };
@@ -116,11 +108,27 @@ public class HomeFragment extends BaseFragment {
     private ExpandableListView.OnGroupExpandListener expandListener =
             new ExpandableListView.OnGroupExpandListener() {
                 @Override
-                public void onGroupExpand(int i) {
+                public void onGroupExpand(final int i) {
                     Log.e(TAG, "onGroupExpand: "+i);
+                    mActivity.createDialog(R.string.loading, true);
+                    mChildController.get(mInfos.get(i).getInNo()).refresh();
+                    mChildController.get(mInfos.get(i).getInNo()).setOnFinishListener(new FeeDetailController.FinishedFill() {
+                        @Override
+                        public void onFinished(View view) {
+                            mActivity.dismissDialog();
+                        }
+                    });
                 }
             };
 
+    private ExpandableListView.OnChildClickListener onChildClickListener =
+            new ExpandableListView.OnChildClickListener() {
+                @Override
+                public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
+                    Log.e(TAG, "onChildClick: group = "+i);
+                    return true;
+                }
+            };
     /**
      * 根据登录的账号获取绑定的楼房
      * */
@@ -156,16 +164,11 @@ public class HomeFragment extends BaseFragment {
 
                 feeRequestCount = mInfos.size();
 
-                mChildViews.clear();
+                mChildController.clear();
                 for (final House info : mInfos) {
                     FeeDetailController controller = new FeeDetailController(mActivity, mInflator.inflate(R.layout.item_home_charge, null), info);
-                    controller.setOnFinishListener(new FeeDetailController.FinishedFill() {
-                        @Override
-                        public void onFinished(View view) {
-                            mChildViews.put(info.getInNo(), view);
-                        }
-                    });
                     controller.fill();
+                    mChildController.put(info.getInNo(), controller);
                 }
                 mAdapter.notifyDataSetChanged();
             }
@@ -204,10 +207,8 @@ public class HomeFragment extends BaseFragment {
 
     private class HomeAdapter extends BaseExpandableListAdapter {
 
-        private LayoutInflater inflater;
-
         public HomeAdapter() {
-            inflater = LayoutInflater.from(mActivity);
+            mInflator = LayoutInflater.from(mActivity);
         }
 
         @Override
@@ -253,7 +254,7 @@ public class HomeFragment extends BaseFragment {
         @Override
         public View getGroupView(int i, boolean b, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = inflater.inflate(R.layout.item_home_build, null);
+                view = mInflator.inflate(R.layout.item_home_build, null);
             }
 
             ViewHolder.<TextView> get(view, R.id.home_build_name)
@@ -263,15 +264,14 @@ public class HomeFragment extends BaseFragment {
         }
 
         @Override
-        public View getChildView(int i, int i1, boolean b, View view, ViewGroup viewGroup) {
-
-            view = mChildViews.get(mInfos.get(i).getInNo());
+        public View getChildView(final int i, int i1, boolean b, View view, ViewGroup viewGroup) {
+            view = mChildController.get(mInfos.get(i).getInNo()).getRootView();
             return view;
         }
 
         @Override
         public boolean isChildSelectable(int i, int i1) {
-            return true;
+            return false;
         }
     }
 

@@ -1,20 +1,17 @@
 package com.kswy.property.main;
 
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.os.Debug;
+import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.DatePicker;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -44,7 +41,7 @@ public class FeeDetailController {
     private Context mContext;
     private View rootView;
     private House mHouse;
-    private LayoutInflater mInflator;
+    private LayoutInflater mInflater;
     private FinishedFill fillListener;
     private boolean isRequestFinished = true;
 
@@ -58,6 +55,8 @@ public class FeeDetailController {
     private ListView preChargeListView;
     private ListView preNormalListView;
 
+    private Button mGoPay;
+
     private PayChargeAdapter payChargeAdapter;
     private PayNormalAdapter payNormalAdapter;
     private PreChargeAdapter preChargeAdapter;
@@ -67,7 +66,7 @@ public class FeeDetailController {
         this.mContext = context;
         this.rootView = rootView;
         this.mHouse = house;
-        mInflator = LayoutInflater.from(context);
+        mInflater = LayoutInflater.from(context);
     }
 
     public void fill() {
@@ -84,29 +83,69 @@ public class FeeDetailController {
         preChargeListView = rootView.findViewById(R.id.fee_pre_charge);
         preNormalListView = rootView.findViewById(R.id.fee_pre_normal);
 
+        mGoPay = rootView.findViewById(R.id.go_pay);
+        mGoPay.setOnClickListener(onClickListener);
+
         payChargeAdapter = new PayChargeAdapter();
         payNormalAdapter = new PayNormalAdapter();
         preChargeAdapter = new PreChargeAdapter();
         preNormalAdapter = new PreNormalAdapter();
 
-
         payChargeListView.setAdapter(payChargeAdapter);
         payNormalListView.setAdapter(payNormalAdapter);
         preChargeListView.setAdapter(preChargeAdapter);
         preNormalListView.setAdapter(preNormalAdapter);
-
-        getFees();
     }
 
     public void refresh() {
         getFees();
     }
 
+    public void notifyDataSetChanged() {
+        payChargeAdapter.notifyDataSetChanged();
+        payNormalAdapter.notifyDataSetChanged();
+        preChargeAdapter.notifyDataSetChanged();
+        preNormalAdapter.notifyDataSetChanged();
+    }
+
+    public View getRootView() {
+        Log.e(TAG, "getRootView: before isFocused = "+mGoPay.isFocused());
+        mGoPay.requestFocus();
+        Log.e(TAG, "getRootView: after isFocused = "+mGoPay.isFocused());
+        mGoPay.setOnClickListener(onClickListener);
+         return rootView;
+    }
+
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.go_pay:
+                    Intent payIntent = new Intent();
+                    payIntent.setClass(mContext, PayActivity.class);
+
+                    Log.e(TAG, "onClick: 1111111111111 : "+mHouse);
+
+                    payIntent.putExtra("payCharge", payCharge);
+                    payIntent.putExtra("preNormal", preNormal);
+                    payIntent.putExtra("payNormal", payNormal);
+                    payIntent.putExtra("preCharge", preCharge);
+                    mContext.startActivity(payIntent);
+                    break;
+            }
+        }
+    };
+
     private void getFees() {
 
         final SparseBooleanArray tagArray = new SparseBooleanArray();
 
         final String inNo = mHouse.getInNo();
+
+        payCharge.clear();
+        payNormal.clear();
+        preCharge.clear();
+        preNormal.clear();
 
         WebRequest.getInstance().getChargeList(inNo, new Observer<JSONArray>() {
             @Override
@@ -206,9 +245,11 @@ public class FeeDetailController {
                 isRequestFinished = isRequestFinish(tagArray);
             }
         });
+
+        preChargeAdapter.notifyDataSetChanged();
     }
 
-    public synchronized boolean isRequestFinish(SparseBooleanArray array) {
+    public boolean isRequestFinish(SparseBooleanArray array) {
         for (int i = 0; i < array.size(); i++) {
             if (!array.get(array.keyAt(i))) {
                 return false;
@@ -232,6 +273,10 @@ public class FeeDetailController {
         fillListener = onFinishListener;
     }
 
+    public void setOnClickListener(View.OnClickListener listener) {
+        mGoPay.setOnClickListener(listener);
+    }
+
     public interface FinishedFill {
         public void onFinished(View view);
     }
@@ -239,7 +284,7 @@ public class FeeDetailController {
     /**
      * 费用标题
      * */
-    private synchronized Fee getFeeTitle() {
+    private Fee getFeeTitle() {
         Fee fee = new Fee();
         fee.setInNo(mContext.getString(R.string.fee_title_inno));
         fee.setInName(mContext.getString(R.string.fee_title_inname));
@@ -268,7 +313,7 @@ public class FeeDetailController {
         private View footer;
 
         public PayChargeAdapter() {
-            footer = mInflator.inflate(R.layout.view_text, null);
+            footer = mInflater.inflate(R.layout.view_text, null);
             initData();
         }
 
@@ -319,7 +364,7 @@ public class FeeDetailController {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = mInflator.inflate(R.layout.item_pay_charge, null);
+                view = mInflater.inflate(R.layout.item_pay_charge, null);
             }
             ViewHolder.<TextView> get(view, R.id.home_fee_inno)
                     .setText(payCharge.get(i).getInNo());
@@ -346,7 +391,7 @@ public class FeeDetailController {
         private View footer;
 
         public PayNormalAdapter() {
-            footer = mInflator.inflate(R.layout.view_text, null);
+            footer = mInflater.inflate(R.layout.view_text, null);
             initData();
         }
 
@@ -396,7 +441,7 @@ public class FeeDetailController {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = mInflator.inflate(R.layout.item_pay_normal, null);
+                view = mInflater.inflate(R.layout.item_pay_normal, null);
             }
             ViewHolder.<TextView> get(view, R.id.home_fee_inno)
                     .setText(payNormal.get(i).getInNo());
@@ -421,7 +466,7 @@ public class FeeDetailController {
         private View footer;
 
         public PreChargeAdapter() {
-            footer = mInflator.inflate(R.layout.view_text, null);
+            footer = mInflater.inflate(R.layout.view_text, null);
             initData();
         }
 
@@ -471,7 +516,7 @@ public class FeeDetailController {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = mInflator.inflate(R.layout.item_pre_charge, null);
+                view = mInflater.inflate(R.layout.item_pre_charge, null);
             }
 
             ViewHolder.<TextView> get(view, R.id.home_fee_inno)
@@ -496,7 +541,7 @@ public class FeeDetailController {
         private View footer;
 
         public PreNormalAdapter() {
-            footer = mInflator.inflate(R.layout.view_text, null);
+            footer = mInflater.inflate(R.layout.view_text, null);
             initData();
         }
 
@@ -546,7 +591,7 @@ public class FeeDetailController {
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
-                view = mInflator.inflate(R.layout.item_pre_normal, null);
+                view = mInflater.inflate(R.layout.item_pre_normal, null);
             }
 
             ViewHolder.<TextView> get(view, R.id.home_fee_inno)
@@ -555,18 +600,47 @@ public class FeeDetailController {
                     .setText(preNormal.get(i).getInName());
             ViewHolder.<TextView> get(view, R.id.home_fee_name)
                     .setText(preNormal.get(i).getFeeName());
-            ViewHolder.<TextView> get(view, R.id.home_fee_last)
-                    .setText(preNormal.get(i).getLastTime());
-            setPayedMonth(view, i);
+//            ViewHolder.<TextView> get(view, R.id.home_fee_last)
+//                    .setText(preNormal.get(i).getLastTime());
+            setLastPayMonth(view, i);
+            setPayMonthTo(view, i);
             ViewHolder.<TextView> get(view, R.id.home_fee_price)
                     .setText(preNormal.get(i).getPrice());
             ViewHolder.<TextView> get(view, R.id.home_fee_total)
                     .setText(preNormal.get(i).getTotal());
-
             return view;
         }
 
-        private void setPayedMonth(View convertView, final int position) {
+        private void setLastPayMonth(View convertView, final int position) {
+            TextView textView = ViewHolder.get(convertView, R.id.home_fee_last);
+
+            Calendar c = Calendar.getInstance();
+            final Fee fee = preNormal.get(position);
+            int year = c.get(Calendar.YEAR);
+            int month = c.get(Calendar.MONTH) + 1;
+            try {
+                if (!TextUtils.isEmpty(fee.getLastTime())) {
+                    String date[] = fee.getLastTime().split("-");
+                    year = Integer.parseInt(date[0]);
+                    month = Integer.parseInt(date[1]);
+                }
+            }catch (Exception e) {
+                e.printStackTrace();
+            }
+            fee.setLastTime(String.format(Locale.CHINA, "%d-%d", year, month));
+            if (TextUtils.isEmpty(fee.getThisTime())) {
+                if ((month += 1) > 12) {
+                    year += 1;
+                    month -= 12;
+                }
+                fee.setThisTime(String.format(Locale.CHINA, "%d-%d", year, month));
+            }
+            fee.setTotal(getTotal(fee));
+            preNormal.set(position, fee);
+            textView.setText(fee.getLastTime());
+        }
+
+        private void setPayMonthTo(View convertView, final int position) {
             TextView textView = ViewHolder.get(convertView, R.id.home_fee_this);
             if (position == 0) {
                 textView.setText(R.string.fee_title_thistime);
@@ -577,27 +651,34 @@ public class FeeDetailController {
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        selectDate(position);
+                        selectDateThis(position);
                     }
                 });
             }
         }
     }
 
-    private void selectDate(final int position) {
+    private void selectDateThis(final int position) {
         Calendar c = Calendar.getInstance();
+
+        if (position < 0 || position >= preNormal.size()) {
+            return;
+        }
         final Fee fee = preNormal.get(position);
         int year = c.get(Calendar.YEAR);
         int month = c.get(Calendar.MONTH);
         try {
-            if (!TextUtils.isEmpty(fee.getLastTime())) {
-                String date[] = fee.getLastTime().split("-");
+            if (!TextUtils.isEmpty(fee.getThisTime())) {
+                String date[] = fee.getThisTime().split("-");
                 year = Integer.parseInt(date[0]);
                 month = Integer.parseInt(date[1]) - 1;
             }
         }catch (Exception e) {
             e.printStackTrace();
         }
+
+        final int minYear = year;
+        final int minMonth = month;
 
         new DatePickerDialog(mContext, 0, new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -606,10 +687,32 @@ public class FeeDetailController {
                 String textString = String.format("选择年月：%d-%d\n", startYear,
                         startMonthOfYear + 1);
                 Log.e(TAG, "onDateSet: selectedDate = "+textString);
+                if (startYear < minYear || (startYear == minYear && startMonthOfYear + 1 < minMonth)) {
+                    return;
+                }
                 fee.setThisTime(String.format(Locale.CHINA, "%d-%d", startYear, startMonthOfYear + 1));
+                fee.setTotal(getTotal(fee));
                 preNormal.set(position, fee);
                 preNormalAdapter.notifyDataSetChanged();
             }
         }, year, month, c.get(Calendar.DATE)).show();
+    }
+
+    private String getTotal(Fee fee) {
+        String total = "";
+        try {
+            String startDate[] = fee.getLastTime().split("-");
+            String endDate[] = fee.getThisTime().split("-");
+
+            int year = Integer.parseInt(endDate[0]) - Integer.parseInt(startDate[0]);
+            int month = Integer.parseInt(endDate[1]) - Integer.parseInt(startDate[1]);
+            float price = Float.parseFloat(fee.getPrice());
+            total = String.valueOf((year * 12 + month) * price);
+        }catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "setTotal: "+e);
+        }
+
+        return total;
     }
 }

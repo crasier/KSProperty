@@ -1,5 +1,8 @@
 package com.kswy.property.bean;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import com.alibaba.fastjson.annotation.JSONField;
 
 import java.io.Serializable;
@@ -48,6 +51,11 @@ public class Fee implements Serializable{
     private String remark;
 
     private boolean hasTitle;//用来标记是否已经加了标题，不属于正常数据
+
+    public Fee() {
+
+    }
+
 
     @Override
     public String toString() {
@@ -216,6 +224,7 @@ public class Fee implements Serializable{
     public void setHasTitle(boolean hasTitle) {
         this.hasTitle = hasTitle;
     }
+
 }
 
 

@@ -8,11 +8,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.DatePicker;
+import android.widget.NumberPicker;
 
 import com.kswy.property.R;
 
 import java.lang.reflect.Field;
+import java.math.MathContext;
 
 public class DatePickerDialog extends AlertDialog implements DialogInterface.OnClickListener, DatePicker.OnDateChangedListener {
 
@@ -22,6 +25,8 @@ public class DatePickerDialog extends AlertDialog implements DialogInterface.OnC
 
     private final DatePicker mDatePickerStart;
     private final OnDateSetListener mCallBack;
+
+    private String[] mDisplayMonths = {"1", "2", "3","4", "5", "6","7", "8", "9","10", "11", "12"};
 
     public interface OnDateSetListener {
         void onDateSet(DatePicker startDatePicker, int startYear, int startMonthOfYear, int startDayOfMonth);
@@ -39,8 +44,8 @@ public class DatePickerDialog extends AlertDialog implements DialogInterface.OnC
         mCallBack = callBack;
 
         Context themeContext = getContext();
-        setButton(BUTTON_POSITIVE, "确 定", this);
-        setButton(BUTTON_NEGATIVE, "取 消", this);
+        setButton(BUTTON_POSITIVE, context.getString(R.string.sure), this);
+        setButton(BUTTON_NEGATIVE, context.getString(R.string.cancel), this);
         setIcon(0);
 
         LayoutInflater inflater = (LayoutInflater) themeContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -92,6 +97,7 @@ public class DatePickerDialog extends AlertDialog implements DialogInterface.OnC
 
     @Override
     public void onDateChanged(DatePicker view, int year, int month, int day) {
+        ((NumberPicker)((ViewGroup) ((ViewGroup) view.getChildAt(0)).getChildAt(0)).getChildAt(1)).setDisplayedValues(mDisplayMonths);
         if (view.getId() == R.id.datePickerStart)
             mDatePickerStart.init(year, month, day, this);
     }
@@ -117,6 +123,15 @@ public class DatePickerDialog extends AlertDialog implements DialogInterface.OnC
     @Override
     protected void onStop() {
         super.onStop();
+    }
+
+
+    @Override
+    public void show() {
+        super.show();
+        if (mDatePickerStart != null) {
+            ((NumberPicker) ((ViewGroup) ((ViewGroup) mDatePickerStart.getChildAt(0)).getChildAt(0)).getChildAt(1)).setDisplayedValues(mDisplayMonths);
+        }
     }
 
     @Override

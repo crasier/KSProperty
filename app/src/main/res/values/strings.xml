@@ -30,6 +30,8 @@
     <string name="cancel">取消</string>
     <string name="tips_warmly">温馨提示</string>
     <string name="no_data">暂无数据</string>
+    <string name="exit_anymore">确认取消</string>
+    <string name="exit_retry">再想想</string>
 
     <!--楼房信息相关-->
     <string name="home_empty"><![CDATA[
@@ -53,6 +55,8 @@
     <string name="fee_charge_unpay">应缴费用</string>
     <string name="fee_charge_payed">预缴费用</string>
     <string name="fee_go_pay">去缴费</string>
+    <string name="fee_order_commit">提交订单</string>
+    <string name="fee_pay_cancel">确认要取消该订单？</string>
 
     <string name="fee_title_inno">房号</string>
     <string name="fee_title_inname">姓名</string>
@@ -65,8 +69,8 @@
     <string name="fee_title_total">小计</string>
     <string name="fee_title_cal">计费方式</string>
     <string name="fee_title_price">单价</string>
-    <string name="fee_title_counts">周期</string>
-    <string name="fee_title_paymonth">支付月份</string>
+    <string name="fee_title_counts">数量</string>
+    <string name="fee_title_paymonth">缴费日期</string>
     <string name="fee_title_payed">预交</string>
     <string name="fee_title_creator">账号</string>
     <string name="fee_title_billfile">账单</string>
