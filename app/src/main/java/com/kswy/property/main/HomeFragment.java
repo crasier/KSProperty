@@ -10,8 +10,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSON;
@@ -48,7 +51,7 @@ public class HomeFragment extends BaseFragment {
     @BindView(R.id.home_header)
     protected MaterialHeader mHeader;
     @BindView(R.id.home_list)
-    protected ExpandableListView mListView;
+    protected ListView mListView;
     @BindView(R.id.home_empty)
     protected TextView mEmpty;
 
@@ -83,8 +86,6 @@ public class HomeFragment extends BaseFragment {
         mAdapter = new HomeAdapter();
         mListView.setAdapter(mAdapter);
 //        mListView.setOnGroupClickListener(groupClickListener);
-        mListView.setOnGroupExpandListener(expandListener);
-        mListView.setOnChildClickListener(onChildClickListener);
         return contentView;
     }
 
@@ -205,39 +206,24 @@ public class HomeFragment extends BaseFragment {
         mAdapter.notifyDataSetChanged();
     }
 
-    private class HomeAdapter extends BaseExpandableListAdapter {
+    private class HomeAdapter extends BaseAdapter {
 
         public HomeAdapter() {
             mInflator = LayoutInflater.from(mActivity);
         }
 
         @Override
-        public int getGroupCount() {
+        public int getCount() {
             return mInfos == null ? 0 : mInfos.size();
         }
 
         @Override
-        public int getChildrenCount(int i) {
-            return 1;
-        }
-
-        @Override
-        public Object getGroup(int i) {
+        public Object getItem(int i) {
             return null;
         }
 
         @Override
-        public Object getChild(int i, int i1) {
-            return null;
-        }
-
-        @Override
-        public long getGroupId(int i) {
-            return 0;
-        }
-
-        @Override
-        public long getChildId(int i, int i1) {
+        public long getItemId(int i) {
             return 0;
         }
 
@@ -247,31 +233,21 @@ public class HomeFragment extends BaseFragment {
         }
 
         @Override
-        public void notifyDataSetChanged() {
-            super.notifyDataSetChanged();
-        }
-
-        @Override
-        public View getGroupView(int i, boolean b, View view, ViewGroup viewGroup) {
+        public View getView(int i, View view, ViewGroup viewGroup) {
             if (view == null) {
                 view = mInflator.inflate(R.layout.item_home_build, null);
+                FeeDetailController controller = new FeeDetailController(mActivity, view, mInfos.get(i));
+                controller.fill();
             }
 
-            ViewHolder.<TextView> get(view, R.id.home_build_name)
-                    .setText(String.format(Locale.CHINA, "%s %s %s",
-                            mInfos.get(i).getBuildName(), mInfos.get(i).getInNo(), mInfos.get(i).getInName()));
+            ViewHolder.<LinearLayout> get(view, R.id.item_home_charge);
+
             return view;
         }
 
         @Override
-        public View getChildView(final int i, int i1, boolean b, View view, ViewGroup viewGroup) {
-            view = mChildController.get(mInfos.get(i).getInNo()).getRootView();
-            return view;
-        }
-
-        @Override
-        public boolean isChildSelectable(int i, int i1) {
-            return false;
+        public void notifyDataSetChanged() {
+            super.notifyDataSetChanged();
         }
     }
 
