@@ -11,9 +11,11 @@
         android:paddingStart="10dp"
         android:paddingRight="10dp"
         android:paddingEnd="10dp"
+        android:layout_marginTop="15dp"
         android:orientation="vertical"
         android:gravity="center_vertical">
         <TextView
+            android:id="@+id/title_pay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
@@ -23,47 +25,62 @@
             android:gravity="center"
             android:text="@string/fee_charge_unpay"/>
         <!--应缴费用，按量-->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
-        <com.kswy.property.widgets.ChildListView
-            android:id="@+id/fee_pay_charge"
+        <LinearLayout
+            android:id="@+id/tab_pay_charge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:layout_height="100dp"
-            android:listSelector="@color/transparent"
-            android:scrollbars="none"
-            android:divider="@color/colorPrimary"
-            android:dividerHeight="1px"
-            tools:listitem="@layout/item_pay_charge"/>
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+            <com.kswy.property.widgets.ChildListView
+                android:id="@+id/fee_pay_charge"
+                tools:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:layout_height="60dp"
+                android:listSelector="@color/transparent"
+                android:scrollbars="none"
+                android:divider="@color/colorPrimary"
+                android:dividerHeight="1px"
+                tools:listitem="@layout/item_pay_charge"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+        </LinearLayout>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"
-            android:layout_marginTop="10dp"/>
-        <!--应缴费用，按月-->
-        <com.kswy.property.widgets.ChildListView
-            android:id="@+id/fee_pay_normal"
+        <LinearLayout
+            android:id="@+id/tab_pay_normal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:layout_height="100dp"
-            android:listSelector="@color/transparent"
-            android:scrollbars="none"
-            android:divider="@color/colorPrimary"
-            android:dividerHeight="1px"
-            tools:listitem="@layout/item_pay_normal"/>
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
+            android:orientation="vertical"
+            android:layout_marginTop="10dp">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+            <!--应缴费用，按月-->
+            <com.kswy.property.widgets.ChildListView
+                android:id="@+id/fee_pay_normal"
+                tools:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:layout_height="60dp"
+                android:listSelector="@color/transparent"
+                android:scrollbars="none"
+                android:divider="@color/colorPrimary"
+                android:dividerHeight="1px"
+                tools:listitem="@layout/item_pay_normal"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+        </LinearLayout>
 
         <TextView
+            android:id="@+id/title_pre"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
@@ -74,44 +91,74 @@
             android:gravity="center"
             android:text="@string/fee_charge_payed"/>
         <!--应缴费用，按量-->
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
-        <com.kswy.property.widgets.ChildListView
-            android:id="@+id/fee_pre_charge"
+        <LinearLayout
+            android:id="@+id/tab_pre_charge"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:layout_height="100dp"
-            android:listSelector="@color/transparent"
-            android:scrollbars="none"
-            android:divider="@color/colorPrimary"
-            android:dividerHeight="1px"
-            tools:listitem="@layout/item_pre_charge"/>
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
+            android:orientation="vertical">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+            <com.kswy.property.widgets.ChildListView
+                android:id="@+id/fee_pre_charge"
+                tools:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:layout_height="60dp"
+                android:listSelector="@color/transparent"
+                android:scrollbars="none"
+                android:divider="@color/colorPrimary"
+                android:dividerHeight="1px"
+                tools:listitem="@layout/item_pre_charge"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+        </LinearLayout>
 
-        <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:layout_marginTop="10dp"
-            android:background="@color/colorPrimary"/>
-        <com.kswy.property.widgets.ChildListView
-            android:id="@+id/fee_pre_normal"
+        <LinearLayout
+            android:id="@+id/tab_pre_normal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            tools:layout_height="100dp"
-            android:listSelector="@color/transparent"
-            android:scrollbars="none"
-            android:divider="@color/colorPrimary"
-            android:dividerHeight="1px"
-            tools:listitem="@layout/item_pre_normal"/>
-        <ImageView
+            android:orientation="vertical"
+            android:layout_marginTop="10dp">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+            <com.kswy.property.widgets.ChildListView
+                android:id="@+id/fee_pre_normal"
+                tools:visibility="gone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:layout_height="60dp"
+                android:listSelector="@color/transparent"
+                android:scrollbars="none"
+                android:divider="@color/colorPrimary"
+                android:dividerHeight="1px"
+                tools:listitem="@layout/item_pre_normal"/>
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/colorPrimary"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/charge_total"
             android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="@color/colorPrimary"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            tools:text="总计:120.00"
+            android:textColor="@color/red"/>
 
         <TextView
             android:id="@+id/go_pay"

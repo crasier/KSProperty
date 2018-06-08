@@ -32,6 +32,9 @@
     <string name="no_data">暂无数据</string>
     <string name="exit_anymore">确认取消</string>
     <string name="exit_retry">再想想</string>
+    <string name="pay_zfb">支付宝支付</string>
+    <string name="pay_wx">微信支付</string>
+    <string name="pay_no_charge">没有需要缴费的项目或与缴费未选择时间</string>
 
     <!--楼房信息相关-->
     <string name="home_empty"><![CDATA[
@@ -69,7 +72,7 @@
     <string name="fee_title_total">小计</string>
     <string name="fee_title_cal">计费方式</string>
     <string name="fee_title_price">单价</string>
-    <string name="fee_title_counts">数量</string>
+    <string name="fee_title_counts">用量</string>
     <string name="fee_title_paymonth">缴费日期</string>
     <string name="fee_title_payed">预交</string>
     <string name="fee_title_creator">账号</string>
@@ -78,6 +81,7 @@
     <string name="fee_title_remark">备注</string>
     <string name="fee_title_limit">限额</string>
     <string name="fee_title_whole">小计</string>
+    <string name="fee_charge_total">费用总计:%s元</string>
 
     <string name="date_picker_title">选择缴费月份</string>
 </resources>

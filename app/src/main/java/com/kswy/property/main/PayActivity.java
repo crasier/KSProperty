@@ -2,18 +2,30 @@ package com.kswy.property.main;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.ActivityInfo;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.text.Layout;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.kswy.property.BaseActivity;
 import com.kswy.property.R;
 import com.kswy.property.bean.Fee;
+import com.kswy.property.utils.MyToast;
 import com.kswy.property.utils.ViewHolder;
 
 import java.util.ArrayList;
@@ -30,6 +42,9 @@ public class PayActivity extends BaseActivity {
     private Unbinder unbinder;
     private LayoutInflater mInflator;
     private AlertDialog exitDialog;
+    private PopupWindow selectPayPopWindow;
+    private DialogFragment selectPayDialog;
+    private float mFeeTotal;
 
     private ArrayList<Fee> payCharge;//应缴，按量
     private ArrayList<Fee> payNormal;//应缴，按月/用户
@@ -44,8 +59,22 @@ public class PayActivity extends BaseActivity {
     protected ListView preChargeListView;
     @BindView(R.id.fee_pre_normal)
     protected ListView preNormalListView;
+    @BindView(R.id.tab_pay_charge)
+    protected LinearLayout tabPayCharge;
+    @BindView(R.id.tab_pay_normal)
+    protected LinearLayout tabPayNormal;
+    @BindView(R.id.tab_pre_charge)
+    protected LinearLayout tabPreCharge;
+    @BindView(R.id.tab_pre_normal)
+    protected LinearLayout tabPreNormal;
+    @BindView(R.id.title_pay)
+    protected TextView mTitlePay;
+    @BindView(R.id.title_pre)
+    protected TextView mTitlePre;
     @BindView(R.id.go_pay)
     protected TextView mGoPay;
+    @BindView(R.id.charge_total)
+    protected TextView mTotal;
 
     private PayChargeAdapter payChargeAdapter;
     private PayNormalAdapter payNormalAdapter;
@@ -59,27 +88,57 @@ public class PayActivity extends BaseActivity {
         setTopBar(R.drawable.icon_back, R.string.fee_order_commit, 0);
         unbinder = ButterKnife.bind(this);
 
-
-//        payCharge = getIntent().getParcelableArrayListExtra("payCharge");
-//        payNormal = getIntent().getParcelableArrayListExtra("payNormal");
-//        preCharge = getIntent().getParcelableArrayListExtra("preCharge");
-//        preNormal = getIntent().getParcelableArrayListExtra("preNormal");
-
         payCharge = (ArrayList<Fee>) getIntent().getSerializableExtra("payCharge");
         payNormal = (ArrayList<Fee>) getIntent().getSerializableExtra("payNormal");
         preCharge = (ArrayList<Fee>) getIntent().getSerializableExtra("preCharge");
         preNormal = (ArrayList<Fee>) getIntent().getSerializableExtra("preNormal");
+        mFeeTotal = getIntent().getFloatExtra("feeTotal", 0);
+        mTotal.setText(getString(R.string.fee_charge_total, String.valueOf(mFeeTotal)));
+        mGoPay.setOnClickListener(this);
 
         mInflator = LayoutInflater.from(this);
-        payChargeAdapter = new PayChargeAdapter();
-        payNormalAdapter = new PayNormalAdapter();
-        preChargeAdapter = new PreChargeAdapter();
-        preNormalAdapter = new PreNormalAdapter();
 
-        payChargeListView.setAdapter(payChargeAdapter);
-        payNormalListView.setAdapter(payNormalAdapter);
-        preChargeListView.setAdapter(preChargeAdapter);
-        preNormalListView.setAdapter(preNormalAdapter);
+        boolean showPayTitle = false;
+        boolean showPreTitle = false;
+
+        if (payCharge == null || payCharge.size() <= 1) {
+            tabPayCharge.setVisibility(View.GONE);
+        }else {
+            tabPayCharge.setVisibility(View.VISIBLE);
+            payChargeAdapter = new PayChargeAdapter();
+            payChargeListView.setAdapter(payChargeAdapter);
+            showPayTitle = true;
+        }
+
+        if (payNormal == null || payNormal.size() <= 1) {
+            tabPayNormal.setVisibility(View.GONE);
+        }else {
+            showPayTitle = true;
+            tabPayNormal.setVisibility(View.VISIBLE);
+            payNormalAdapter = new PayNormalAdapter();
+            payNormalListView.setAdapter(payNormalAdapter);
+        }
+
+        if (preCharge == null || preCharge.size() <= 1) {
+            tabPreCharge.setVisibility(View.GONE);
+        }else {
+            showPreTitle = true;
+            tabPreCharge.setVisibility(View.VISIBLE);
+            preChargeAdapter = new PreChargeAdapter();
+            preChargeListView.setAdapter(preChargeAdapter);
+        }
+
+        if (preNormal == null || preNormal.size() <= 1) {
+            tabPreNormal.setVisibility(View.GONE);
+        }else {
+            showPreTitle = true;
+            tabPreNormal.setVisibility(View.VISIBLE);
+            preNormalAdapter = new PreNormalAdapter();
+            preNormalListView.setAdapter(preNormalAdapter);
+        }
+
+        mTitlePay.setVisibility(showPayTitle ? View.VISIBLE : View.GONE);
+        mTitlePre.setVisibility(showPreTitle ? View.VISIBLE : View.GONE);
     }
 
     @Override
@@ -95,11 +154,27 @@ public class PayActivity extends BaseActivity {
             case R.id.base_top_left:
                 onBackPressed();
                 break;
+            case R.id.go_pay:
+                showPayPlat();
+                break;
+            case R.id.pay_plat_zfb:
+                MyToast.show(PayActivity.this, "走支付宝支付流程");
+                break;
+            case R.id.pay_plat_wx:
+                MyToast.show(PayActivity.this, "走微信支付流程");
+                break;
+            case R.id.pay_outside:
+            case R.id.pay_cancel:
+                dismissSelectPayPopWindow();
+                break;
         }
     }
 
     @Override
     public void onBackPressed() {
+        if (dismissSelectPayPopWindow()) {
+            return;
+        }
         sureToExit();
     }
 
@@ -126,6 +201,34 @@ public class PayActivity extends BaseActivity {
         }
 
         exitDialog.show();
+    }
+
+    private void showPayPlat() {
+        if (selectPayPopWindow == null) {
+            View rootView = mInflator.inflate(R.layout.layout_pop_pay, null);
+            selectPayPopWindow = new PopupWindow(rootView, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            selectPayPopWindow.setBackgroundDrawable(null);
+            selectPayPopWindow.setClippingEnabled(false);
+            rootView.findViewById(R.id.pay_outside).setOnClickListener(this);
+            rootView.findViewById(R.id.pay_plat_zfb).setOnClickListener(this);
+            rootView.findViewById(R.id.pay_plat_wx).setOnClickListener(this);
+            rootView.findViewById(R.id.pay_cancel).setOnClickListener(this);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            selectPayPopWindow.showAsDropDown(getWindow().getDecorView(), Gravity.NO_GRAVITY, 0, 0);
+        }else {
+            selectPayPopWindow.showAtLocation(getWindow().getDecorView(), Gravity.NO_GRAVITY, 0, 0);
+        }
+    }
+
+    private boolean dismissSelectPayPopWindow() {
+        if (selectPayPopWindow != null && selectPayPopWindow.isShowing()) {
+            selectPayPopWindow.dismiss();
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -471,7 +574,11 @@ public class PayActivity extends BaseActivity {
 
         private void setTotal(View convertView, int position) {
             TextView textView = ViewHolder.get(convertView, R.id.home_fee_total);
-            String total = "";
+            if (position == 0) {
+                textView.setText(preNormal.get(position).getTotal());
+                return;
+            }
+            String total = "0";
             try {
                 String startDate[] = preNormal.get(position).getLastTime().split("-");
                 String endDate[] = preNormal.get(position).getThisTime().split("-");

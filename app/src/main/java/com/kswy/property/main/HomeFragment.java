@@ -1,7 +1,6 @@
 package com.kswy.property.main;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,9 +9,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.ExpandableListView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -26,7 +25,6 @@ import com.kswy.property.bean.Fee;
 import com.kswy.property.bean.User;
 import com.kswy.property.server.WebRequest;
 import com.kswy.property.utils.MyToast;
-import com.kswy.property.utils.ViewHolder;
 import com.scwang.smartrefresh.header.MaterialHeader;
 import com.scwang.smartrefresh.layout.SmartRefreshLayout;
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
@@ -59,12 +57,11 @@ public class HomeFragment extends BaseFragment {
     public ArrayList<House> mInfos;
     private HashMap<String, ArrayList<Fee>> feeMap;//费用清单key:inNo,value:Fee
     private HomeAdapter mAdapter;
-    private HashMap<String, FeeDetailController> mChildController;//
     private LayoutInflater mInflator;
 
     private static HomeFragment instance;
 
-    private volatile int feeRequestCount;
+    private boolean isListViewIdle = true;
 
     @Override
     public void onAttach(Context context) {
@@ -79,13 +76,12 @@ public class HomeFragment extends BaseFragment {
 
         unbinder = ButterKnife.bind(this, contentView);
         getBuild();
-        mChildController = new HashMap<>();
         mInflator = inflater;
 
         mRefreshLayout.setOnRefreshListener(onRefreshListener);
         mAdapter = new HomeAdapter();
         mListView.setAdapter(mAdapter);
-//        mListView.setOnGroupClickListener(groupClickListener);
+        mListView.setOnScrollListener(onScrollListener);
         return contentView;
     }
 
@@ -96,40 +92,26 @@ public class HomeFragment extends BaseFragment {
         }
     };
 
-    private ExpandableListView.OnGroupClickListener groupClickListener =
-            new ExpandableListView.OnGroupClickListener() {
+    private AbsListView.OnScrollListener onScrollListener =
+            new AbsListView.OnScrollListener() {
                 @Override
-                public boolean onGroupClick(ExpandableListView expandableListView, View view, int i, long l) {
-                    Log.e(TAG, "onGroupClick: "+expandableListView.isGroupExpanded(i));
+                public void onScrollStateChanged(AbsListView absListView, int i) {
+                    switch (i) {
+                        case SCROLL_STATE_IDLE:
+                            isListViewIdle = true;
+                            break;
+                        default:
+                            isListViewIdle = false;
+                            break;
+                    }
+                }
 
-                    return false;
+                @Override
+                public void onScroll(AbsListView absListView, int i, int i1, int i2) {
+
                 }
             };
 
-    private ExpandableListView.OnGroupExpandListener expandListener =
-            new ExpandableListView.OnGroupExpandListener() {
-                @Override
-                public void onGroupExpand(final int i) {
-                    Log.e(TAG, "onGroupExpand: "+i);
-                    mActivity.createDialog(R.string.loading, true);
-                    mChildController.get(mInfos.get(i).getInNo()).refresh();
-                    mChildController.get(mInfos.get(i).getInNo()).setOnFinishListener(new FeeDetailController.FinishedFill() {
-                        @Override
-                        public void onFinished(View view) {
-                            mActivity.dismissDialog();
-                        }
-                    });
-                }
-            };
-
-    private ExpandableListView.OnChildClickListener onChildClickListener =
-            new ExpandableListView.OnChildClickListener() {
-                @Override
-                public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
-                    Log.e(TAG, "onChildClick: group = "+i);
-                    return true;
-                }
-            };
     /**
      * 根据登录的账号获取绑定的楼房
      * */
@@ -163,14 +145,6 @@ public class HomeFragment extends BaseFragment {
                     mEmpty.setVisibility(View.GONE);
                 }
 
-                feeRequestCount = mInfos.size();
-
-                mChildController.clear();
-                for (final House info : mInfos) {
-                    FeeDetailController controller = new FeeDetailController(mActivity, mInflator.inflate(R.layout.item_home_charge, null), info);
-                    controller.fill();
-                    mChildController.put(info.getInNo(), controller);
-                }
                 mAdapter.notifyDataSetChanged();
             }
 
@@ -186,6 +160,14 @@ public class HomeFragment extends BaseFragment {
                 Log.e(TAG, "getBuild onComplete: ");
             }
         });
+    }
+
+    private void onItemTitleClickListener(View view, HomeAdapter.ViewHolder holder) {
+        holder.isCollapse = !holder.isCollapse;
+        if (!holder.isCollapse) {
+            holder.controller.refresh();
+        }
+        mAdapter.notifyDataSetChanged();
     }
 
     public synchronized HashMap<String, ArrayList<Fee>> getFeeMap() {
@@ -233,21 +215,44 @@ public class HomeFragment extends BaseFragment {
         }
 
         @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
+        public View getView(final int i, View view, ViewGroup viewGroup) {
+            final ViewHolder holder;
             if (view == null) {
+                holder = new ViewHolder();
                 view = mInflator.inflate(R.layout.item_home_build, null);
+                holder.title = view.findViewById(R.id.home_build_name);
                 FeeDetailController controller = new FeeDetailController(mActivity, view, mInfos.get(i));
                 controller.fill();
+                holder.controller = controller;
+                holder.isCollapse = true;
+                view.setTag(holder);
+            }else {
+                holder = (ViewHolder) view.getTag();
             }
 
-            ViewHolder.<LinearLayout> get(view, R.id.item_home_charge);
+            holder.controller.setData(mInfos.get(i));
+            if (holder.isCollapse) {
+                holder.controller.getContentView().setVisibility(View.GONE);
+            }else {
+                holder.controller.getContentView().setVisibility(View.VISIBLE);
+            }
+
+            holder.title.setText(String.format(Locale.CHINA, "%s %s %s",
+                    mInfos.get(i).getBuildName(), mInfos.get(i).getInNo(), mInfos.get(i).getInName()));
+            holder.title.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onItemTitleClickListener(view, holder);
+                }
+            });
 
             return view;
         }
 
-        @Override
-        public void notifyDataSetChanged() {
-            super.notifyDataSetChanged();
+        private class ViewHolder {
+            TextView title;
+            FeeDetailController controller;
+            boolean isCollapse = true;
         }
     }
 
