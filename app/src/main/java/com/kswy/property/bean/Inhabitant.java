@@ -7,12 +7,13 @@ import java.util.ArrayList;
 
 public class Inhabitant implements Serializable {
 
-    @JSONField
+    @JSONField(name = "buildId")
     private Integer buildId;
 
-    @JSONField
+    @JSONField(name = "buildName")
     private String buildName;
 
+    @JSONField(name = "inhats")
     private ArrayList<House> inhats;
 
     @Override

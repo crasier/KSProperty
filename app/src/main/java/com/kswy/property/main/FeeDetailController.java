@@ -3,7 +3,6 @@ package com.kswy.property.main;
 
 import android.content.Context;
 import android.content.Intent;
-import android.speech.RecognitionService;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseBooleanArray;
@@ -26,6 +25,8 @@ import com.kswy.property.utils.MyToast;
 import com.kswy.property.utils.ViewHolder;
 import com.kswy.property.widgets.DatePickerDialog;
 
+import java.math.BigDecimal;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
@@ -154,11 +155,13 @@ public class FeeDetailController {
 
         final String inNo = mHouse.getInNo();
 
+
+        //应缴 按量
         WebRequest.getInstance().getChargeList(inNo, new Observer<JSONArray>() {
             @Override
             public void onSubscribe(Disposable d) {
                 tagArray.put(0, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
 
             @Override
@@ -184,15 +187,16 @@ public class FeeDetailController {
             public void onComplete() {
                 Log.e(TAG, "getChargeList "+inNo+"; onComplete: ");
                 tagArray.put(0, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
         });
 
+        //应缴 按月
         WebRequest.getInstance().getNormalPay(inNo, new Observer<JSONArray>() {
             @Override
             public void onSubscribe(Disposable d) {
                 tagArray.put(1, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
 
             @Override
@@ -218,15 +222,16 @@ public class FeeDetailController {
             public void onComplete() {
                 Log.e(TAG, "getNormalPay: "+inNo+"; onComplete: ");
                 tagArray.put(1, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
         });
 
+        //预缴 按月
         WebRequest.getInstance().getLastPrePay(inNo, new Observer<JSONArray>() {
             @Override
             public void onSubscribe(Disposable d) {
                 tagArray.put(2, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
 
             @Override
@@ -234,8 +239,15 @@ public class FeeDetailController {
                 Log.e(TAG, "getLastPrePay "+inNo+"; onNext: array = "+array);
                 tagArray.put(2, true);
                 ArrayList<Fee> fees = (ArrayList<Fee>) JSON.parseArray(array.toJSONString(), Fee.class);
+
+                for (int i = 0; i < fees.size(); i++) {
+                    setLastPayMonth(fees.get(i));
+                }
+
                 preNormal.clear();
                 preNormal.addAll(fees);
+
+                //处理已缴费至 和 缴费至 字段数据
                 Log.e(TAG, "getLastPrePay "+inNo+"; onNext: fees = "+fees);
                 preNormalAdapter.notifyDataSetChanged();
                 isRequestFinished = isRequestFinish(tagArray);
@@ -252,12 +264,43 @@ public class FeeDetailController {
             public void onComplete() {
                 Log.e(TAG, "getLastPrePay "+inNo+"; onComplete: ");
                 tagArray.put(2, true);
-                isRequestFinished = isRequestFinish(tagArray);
+//                isRequestFinished = isRequestFinish(tagArray);
             }
         });
 
         preCharge.clear();
         preChargeAdapter.notifyDataSetChanged();
+    }
+
+    /**
+     * 处理上次缴费日期数据
+     * */
+    private void setLastPayMonth(final Fee fee) {
+
+        Calendar c = Calendar.getInstance();
+        int year = c.get(Calendar.YEAR);
+        int payYear = -1;
+        int month = c.get(Calendar.MONTH) + 1;
+        int payMonth = -1;
+        try {
+            if (!TextUtils.isEmpty(fee.getPayMonth())) {
+                String date[] = fee.getPayMonth().trim().split("-");
+                payYear = Integer.parseInt(date[0].trim());
+                payMonth = Integer.parseInt(date[1].trim());
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        fee.setPayMonth(
+                String.format(Locale.CHINA, "%d-%d",
+                        payYear < 0 ? year : payYear,
+                        payMonth < 0 ? month : payMonth));
+        if (TextUtils.isEmpty(fee.getPayMonthTo())) {
+            fee.setPayMonthTo(String.format(Locale.CHINA, "%d-%d",
+                    year < payYear ? payYear : year,
+                    month < payMonth ? payMonth : month));
+        }
     }
 
     public boolean isRequestFinish(SparseBooleanArray array) {
@@ -293,12 +336,16 @@ public class FeeDetailController {
         }
 
         for (Fee fee : preNormal) {
-            feeTotal = addFee(feeTotal, fee);
+            feeTotal = addFeeByMonth(feeTotal, fee);
         }
 
+        Log.e(TAG, "setChargeTotal: 111111 total = "+feeTotal);
 
-        mTotalFee = feeTotal;
-        mTotal.setText(mContext.getString(R.string.fee_charge_total, String.valueOf(feeTotal)));
+        BigDecimal bd = new BigDecimal(feeTotal);
+
+
+        mTotalFee = bd.setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
+        mTotal.setText(mContext.getString(R.string.fee_charge_total, String.valueOf(mTotalFee)));
     }
 
     private float addFee(float total, Fee fee) {
@@ -307,6 +354,13 @@ public class FeeDetailController {
         }catch (Exception e) {
             e.printStackTrace();
         }
+
+        return total;
+    }
+
+    private float addFeeByMonth(float total, Fee fee) {
+
+        total += getTotal(fee);
 
         return total;
     }
@@ -346,6 +400,7 @@ public class FeeDetailController {
         fee.setLastTime(mContext.getString(R.string.fee_title_lasttime));
         fee.setThisTime(mContext.getString(R.string.fee_title_thistime));
         fee.setPayMonth(mContext.getString(R.string.fee_title_paymonth));
+        fee.setPayMonthTo(mContext.getString(R.string.fee_title_paymonth_to));
         fee.setIsPay(mContext.getString(R.string.fee_title_payed));
         fee.setCreator(mContext.getString(R.string.fee_title_creator));
         fee.setBillFile(mContext.getString(R.string.fee_title_billfile));
@@ -356,6 +411,9 @@ public class FeeDetailController {
         return fee;
     }
 
+    /**
+     * 应缴费用（按量）
+     * */
     private class PayChargeAdapter extends BaseAdapter {
 
         private View footer;
@@ -434,6 +492,9 @@ public class FeeDetailController {
         }
     }
 
+    /**
+     * 应缴费用（按月）
+     * */
     private class PayNormalAdapter extends BaseAdapter {
 
         private View footer;
@@ -509,6 +570,9 @@ public class FeeDetailController {
         }
     }
 
+    /**
+     * 预交费用（按量）
+     * */
     private class PreChargeAdapter extends BaseAdapter {
 
         private View footer;
@@ -584,6 +648,9 @@ public class FeeDetailController {
         }
     }
 
+    /**
+     * 预交费用（按月）
+     * */
     private class PreNormalAdapter extends BaseAdapter {
 
         private View footer;
@@ -648,50 +715,14 @@ public class FeeDetailController {
                     .setText(preNormal.get(i).getInName());
             ViewHolder.<TextView> get(view, R.id.home_fee_name)
                     .setText(preNormal.get(i).getFeeName());
-//            ViewHolder.<TextView> get(view, R.id.home_fee_last)
-//                    .setText(preNormal.get(i).getLastTime());
-            setLastPayMonth(view, i);
+            ViewHolder.<TextView> get(view, R.id.home_fee_last)
+                    .setText(preNormal.get(i).getPayMonth());
             setPayMonthTo(view, i);
             ViewHolder.<TextView> get(view, R.id.home_fee_price)
-                    .setText(preNormal.get(i).getPrice());
+                    .setText(i == 0 ? mContext.getString(R.string.fee_title_price) : preNormal.get(i).getTotal());
             ViewHolder.<TextView> get(view, R.id.home_fee_total)
-                    .setText(preNormal.get(i).getTotal());
+                    .setText(i == 0 ? mContext.getString(R.string.fee_title_whole) : String.valueOf(getTotal(preNormal.get(i))));
             return view;
-        }
-
-        private void setLastPayMonth(View convertView, final int position) {
-            TextView textView = ViewHolder.get(convertView, R.id.home_fee_last);
-
-            if (position == 0) {//仅显示标题
-                textView.setText(preNormal.get(position).getLastTime());
-                return;
-            }
-
-            Calendar c = Calendar.getInstance();
-            final Fee fee = preNormal.get(position);
-            int year = c.get(Calendar.YEAR);
-            int month = c.get(Calendar.MONTH) + 1;
-            try {
-                if (!TextUtils.isEmpty(fee.getLastTime())) {
-                    String date[] = fee.getLastTime().split("-");
-                    year = Integer.parseInt(date[0]);
-                    month = Integer.parseInt(date[1]);
-                }
-            }catch (Exception e) {
-                e.printStackTrace();
-            }
-            fee.setLastTime(String.format(Locale.CHINA, "%d-%d", year, month));
-            fee.setThisTime(String.format(Locale.CHINA, "%d-%d", year, month));
-//            if (TextUtils.isEmpty(fee.getThisTime())) {
-//                if ((month += 1) > 12) {
-//                    year += 1;
-//                    month -= 12;
-//                }
-//                fee.setThisTime(String.format(Locale.CHINA, "%d-%d", year, month));
-//            }
-            fee.setTotal(getTotal(fee));
-            preNormal.set(position, fee);
-            textView.setText(fee.getLastTime());
         }
 
         private void setPayMonthTo(View convertView, final int position) {
@@ -700,7 +731,7 @@ public class FeeDetailController {
                 textView.setText(R.string.fee_title_thistime);
                 textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
             }else {
-                textView.setText(preNormal.get(position).getThisTime());
+                textView.setText(preNormal.get(position).getPayMonthTo());
                 textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.icon_calendar, 0);
                 textView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -720,19 +751,18 @@ public class FeeDetailController {
         }
         final Fee fee = preNormal.get(position);
         int year = c.get(Calendar.YEAR);
+        final int minYear = year;
         int month = c.get(Calendar.MONTH);
+        final int minMonth = month + 1;
         try {
-            if (!TextUtils.isEmpty(fee.getThisTime())) {
-                String date[] = fee.getThisTime().split("-");
+            if (!TextUtils.isEmpty(fee.getPayMonthTo())) {
+                String date[] = fee.getPayMonthTo().split("-");
                 year = Integer.parseInt(date[0]);
                 month = Integer.parseInt(date[1]) - 1;
             }
         }catch (Exception e) {
             e.printStackTrace();
         }
-
-        final int minYear = year;
-        final int minMonth = month;
 
         new DatePickerDialog(mContext, 0, new DatePickerDialog.OnDateSetListener() {
             @Override
@@ -744,8 +774,7 @@ public class FeeDetailController {
                 if (startYear < minYear || (startYear == minYear && startMonthOfYear + 1 < minMonth)) {
                     return;
                 }
-                fee.setThisTime(String.format(Locale.CHINA, "%d-%d", startYear, startMonthOfYear + 1));
-                fee.setTotal(getTotal(fee));
+                fee.setPayMonthTo(String.format(Locale.CHINA, "%d-%d", startYear, startMonthOfYear + 1));
                 preNormal.set(position, fee);
                 preNormalAdapter.notifyDataSetChanged();
                 setChargeTotal();
@@ -753,16 +782,19 @@ public class FeeDetailController {
         }, year, month, c.get(Calendar.DATE)).show();
     }
 
-    private String getTotal(Fee fee) {
-        String total = "0";
+    private float getTotal(Fee fee) {
+
+        Log.e(TAG, "setChargeTotal: getTotal 22222222222222 = "+fee);
+
+        float total = 0;
         try {
-            String startDate[] = fee.getLastTime().split("-");
-            String endDate[] = fee.getThisTime().split("-");
+            String startDate[] = fee.getPayMonth().trim().split("-");
+            String endDate[] = fee.getPayMonthTo().trim().split("-");
 
             int year = Integer.parseInt(endDate[0]) - Integer.parseInt(startDate[0]);
             int month = Integer.parseInt(endDate[1]) - Integer.parseInt(startDate[1]);
-            float price = Float.parseFloat(fee.getPrice());
-            total = String.valueOf((year * 12 + month) * price);
+            float price = Float.parseFloat(fee.getTotal());
+            total = (year * 12 + month) * price;
         }catch (Exception e) {
             e.printStackTrace();
             Log.e(TAG, "setTotal: "+e);

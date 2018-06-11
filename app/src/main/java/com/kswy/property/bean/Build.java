@@ -8,19 +8,19 @@ import java.io.Serializable;
  * 楼宇信息
  * */
 public class Build implements Serializable{
-    @JSONField
+    @JSONField(name = "id")
     private Integer id;
-    @JSONField
+    @JSONField(name = "buildId")
     private String buildId;
-    @JSONField
+    @JSONField(name = "buildName")
     private String buildName;
-    @JSONField
+    @JSONField(name = "buildStru")
     private String buildStru;
-    @JSONField
+    @JSONField(name = "unitCount")
     private Integer unitCount;
-    @JSONField
+    @JSONField(name = "floorCount")
     private Integer floorCount;
-    @JSONField
+    @JSONField(name = "houseCount")
     private Integer houseCount;
 
     @Override

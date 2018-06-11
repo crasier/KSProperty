@@ -6,51 +6,53 @@ import android.os.Parcelable;
 import com.alibaba.fastjson.annotation.JSONField;
 
 import java.io.Serializable;
+import java.lang.annotation.Target;
 
 /**
  * 费用明细
  * */
 public class Fee implements Serializable{
-    @JSONField
+    @JSONField(name = "id")
     private Integer id;
-    @JSONField
+    @JSONField(name = "inNo")
     private String inNo;
-    @JSONField
+    @JSONField(name = "inName")
     private String inName;
-    @JSONField
+    @JSONField(name = "feeName")
     private String feeName;
-    @JSONField
+    @JSONField(name = "buildId")
     private String buildId;
-    @JSONField
+    @JSONField(name = "total")
     private String total;
-    @JSONField
+    @JSONField(name = "price")
     private String price;
-    @JSONField
+    @JSONField(name = "counts")
     private String counts;
-    @JSONField
+    @JSONField(name = "lastCount")
     private String lastCount;
-    @JSONField
+    @JSONField(name = "lastTime")
     private String lastTime;
-    @JSONField
+    @JSONField(name = "thisCount")
     private String thisCount;
-    @JSONField
+    @JSONField(name = "thisTime")
     private String thisTime;
-    @JSONField
+    @JSONField(name = "payMonth")
     private String payMonth;
-    @JSONField
+    @JSONField(name = "isPay")
     private String isPay;
-    @JSONField
+    @JSONField(name = "creator")
     private String creator;
-    @JSONField
+    @JSONField(name = "billFile")
     private String billFile;
-    @JSONField
+    @JSONField(name = "payFile")
     private String payFile;
-    @JSONField
+    @JSONField(name = "createTime")
     private String createTime;
-    @JSONField
+    @JSONField(name = "remark")
     private String remark;
 
     private boolean hasTitle;//用来标记是否已经加了标题，不属于正常数据
+    private String payMonthTo;//不是从服务器端获取的数据，用来存储缴费到的日期
 
     public Fee() {
 
@@ -61,7 +63,7 @@ public class Fee implements Serializable{
     public String toString() {
         return "id:"+id+";inNo:"+inNo+";inName:"+inName+";feeName:"+feeName+";buildId:"+buildId+";total:"+total
                 +";price:"+price+";counts:"+counts+";lastCount:"+lastCount+";lastTime:"+lastTime+";thisCount:"+thisCount
-                +";thisTime:"+thisTime+";isPay:"+isPay+";creator:"+inNo+";creator:"+ billFile +";inNo:"+ billFile
+                +";thisTime:"+thisTime+";payMonth:"+payMonth+";payMonthTo:"+payMonthTo+";isPay:"+isPay+";creator:"+inNo+";creator:"+ billFile +";inNo:"+ billFile
                 +";payFile:"+payFile+";createTime:"+createTime+";remark:"+remark;
     }
 
@@ -225,6 +227,13 @@ public class Fee implements Serializable{
         this.hasTitle = hasTitle;
     }
 
+    public String getPayMonthTo() {
+        return payMonthTo;
+    }
+
+    public void setPayMonthTo(String payMonthTo) {
+        this.payMonthTo = payMonthTo;
+    }
 }
 
 

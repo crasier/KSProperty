@@ -52,6 +52,5 @@
             android:drawableTop="@drawable/icon_mine_disable"
             android:drawablePadding="5dp"
             android:gravity="center_horizontal"/>
-
     </LinearLayout>
 </LinearLayout>

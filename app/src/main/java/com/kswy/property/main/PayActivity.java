@@ -38,6 +38,8 @@ import butterknife.Unbinder;
  * 支付界面
  * */
 public class PayActivity extends BaseActivity {
+
+    private static final String TAG = "PayActivity";
     
     private Unbinder unbinder;
     private LayoutInflater mInflator;
@@ -248,6 +250,7 @@ public class PayActivity extends BaseActivity {
         fee.setLastTime(getString(R.string.fee_title_lasttime));
         fee.setThisTime(getString(R.string.fee_title_thistime));
         fee.setPayMonth(getString(R.string.fee_title_paymonth));
+        fee.setPayMonthTo(getString(R.string.fee_title_paymonth_to));
         fee.setIsPay(getString(R.string.fee_title_payed));
         fee.setCreator(getString(R.string.fee_title_creator));
         fee.setBillFile(getString(R.string.fee_title_billfile));
@@ -551,14 +554,12 @@ public class PayActivity extends BaseActivity {
             ViewHolder.<TextView> get(view, R.id.home_fee_name)
                     .setText(preNormal.get(i).getFeeName());
             ViewHolder.<TextView> get(view, R.id.home_fee_last)
-                    .setText(preNormal.get(i).getLastTime());
+                    .setText(preNormal.get(i).getPayMonth());
             setPayedMonth(view, i);
             ViewHolder.<TextView> get(view, R.id.home_fee_price)
                     .setText(preNormal.get(i).getPrice());
             ViewHolder.<TextView> get(view, R.id.home_fee_total)
-                    .setText(preNormal.get(i).getTotal());
-            setTotal(view, i);
-
+                    .setText(i == 0 ? preNormal.get(i).getTotal() : String.valueOf(getTotal(preNormal.get(i))));
             return view;
         }
 
@@ -568,31 +569,27 @@ public class PayActivity extends BaseActivity {
                 textView.setText(R.string.fee_title_thistime);
                 textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
             }else {
-                textView.setText(preNormal.get(position).getThisTime());
+                textView.setText(preNormal.get(position).getPayMonthTo());
             }
         }
+    }
 
-        private void setTotal(View convertView, int position) {
-            TextView textView = ViewHolder.get(convertView, R.id.home_fee_total);
-            if (position == 0) {
-                textView.setText(preNormal.get(position).getTotal());
-                return;
-            }
-            String total = "0";
-            try {
-                String startDate[] = preNormal.get(position).getLastTime().split("-");
-                String endDate[] = preNormal.get(position).getThisTime().split("-");
+    private float getTotal(Fee fee) {
 
-                int year = Integer.parseInt(endDate[0]) - Integer.parseInt(startDate[0]);
-                int month = Integer.parseInt(endDate[1]) - Integer.parseInt(startDate[1]);
-                float price = Float.parseFloat(preNormal.get(position).getPrice());
-                total = String.valueOf((year * 12 + month) * price);
-            }catch (Exception e) {
-                e.printStackTrace();
-                Log.e("PayActivity", "setTotal: "+e);
-            }
+        float total = 0;
+        try {
+            String startDate[] = fee.getPayMonth().trim().split("-");
+            String endDate[] = fee.getPayMonthTo().trim().split("-");
 
-            textView.setText(total);
+            int year = Integer.parseInt(endDate[0]) - Integer.parseInt(startDate[0]);
+            int month = Integer.parseInt(endDate[1]) - Integer.parseInt(startDate[1]);
+            float price = Float.parseFloat(fee.getTotal());
+            total = (year * 12 + month) * price;
+        }catch (Exception e) {
+            e.printStackTrace();
+            Log.e(TAG, "setTotal: "+e);
         }
+
+        return total;
     }
 }

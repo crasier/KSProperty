@@ -309,7 +309,7 @@ public class WebRequest {
     }
 
     /**
-     * 根据用户门牌ID获取上次预交费信息
+     * 根据用户门牌ID获取上次预交费信息（按月）
      * @param inNo 用户门牌id
      * @param listener 回调监听
      */

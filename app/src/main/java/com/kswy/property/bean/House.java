@@ -9,25 +9,25 @@ import java.io.Serializable;
  * 住房信息
  * */
 public class House implements Serializable{
-    @JSONField
+    @JSONField(name = "id")
     private Integer id;
-    @JSONField
+    @JSONField(name = "inName")
     private String inName;
-    @JSONField
+    @JSONField(name = "inNo")
     private String inNo;
-    @JSONField
+    @JSONField(name = "buildId")
     private String buildId;
-    @JSONField
+    @JSONField(name = "buildName")
     private String buildName;
-    @JSONField
+    @JSONField(name = "unit")
     private Integer unit;
-    @JSONField
+    @JSONField(name = "floor")
     private Integer floor;
-    @JSONField
+    @JSONField(name = "area")
     private Float area;
-    @JSONField
+    @JSONField(name = "phone")
     private String phone;
-    @JSONField
+    @JSONField(name = "cardID")
     private String cardID;
 
     @Override
